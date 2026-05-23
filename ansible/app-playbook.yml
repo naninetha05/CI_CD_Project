@@ -24,7 +24,7 @@
 
     - name: Download Tomcat
       get_url:
-        url: https://downloads.apache.org/tomcat/tomcat-9/v9.0.106/bin/apache-tomcat-9.0.106.tar.gz
+        url: https://downloads.apache.org/tomcat/tomcat-9/v9.0.118/bin/apache-tomcat-9.0.118.tar.gz
         dest: /tmp/tomcat.tar.gz
 
     - name: Extract Tomcat
@@ -34,7 +34,7 @@
         remote_src: yes
 
     - name: Rename Tomcat directory
-      shell: mv /opt/apache-tomcat-9.0.106 /opt/tomcat
+      shell: mv /opt/apache-tomcat-9.0.118 /opt/tomcat
       args:
         creates: /opt/tomcat/bin/startup.sh
 
