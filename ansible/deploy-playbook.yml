@@ -6,17 +6,24 @@
 
   vars:
     war_source: "{{ war_file_path | default('/tmp/app.war') }}"
+    war_remote: /tmp/app.war
     tomcat_webapps: /opt/tomcat/webapps
 
   tasks:
+    - name: Copy WAR file from Jenkins to app server
+      copy:
+        src: "{{ war_source }}"
+        dest: "{{ war_remote }}"
+        mode: '0644'
+
     - name: Check if WAR file exists
       stat:
-        path: "{{ war_source }}"
+        path: "{{ war_remote }}"
       register: war_stat
 
     - name: Fail if WAR file not found
       fail:
-        msg: "WAR file not found at {{ war_source }}"
+        msg: "WAR file not found at {{ war_remote }}"
       when: not war_stat.stat.exists
 
     - name: Stop Tomcat
@@ -38,11 +45,12 @@
 
     - name: Copy WAR file to Tomcat
       copy:
-        src: "{{ war_source }}"
+        src: "{{ war_remote }}"
         dest: "{{ tomcat_webapps }}/app.war"
         owner: tomcat
         group: tomcat
         mode: '0644'
+        remote_src: yes
 
     - name: Extract WAR file
       shell: |
