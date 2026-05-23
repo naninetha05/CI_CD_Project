@@ -23,7 +23,6 @@ public class HelloServletTest {
 
     @Test
     public void testApplicationRunning() {
-        boolean isRunning = true;
-        assertTrue("Application should be running", isRunning);
+       assertTrue(javaVersion.contains("11") || javaVersion.contains("1.8"));
     }
 }
