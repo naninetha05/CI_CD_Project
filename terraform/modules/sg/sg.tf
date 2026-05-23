@@ -1,26 +1,26 @@
 resource "aws_security_group" "jenkins_sg" {
-  name        = "jenkins-sg"
-  description = "Security group for Jenkins server"
-  vpc_id      = aws_vpc.main.id
+  name        = var.sg_name
+  description = var.sg_description
+  vpc_id      = var.vpc_id
 
   # SSH ACCESS
-   ingress {
+  ingress {
     description = "SSH access"
-    from_port   = 22
-    to_port     = 22
+    from_port   = var.ssh_port
+    to_port     = var.ssh_port
     protocol    = "tcp"
 
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = var.allowed_cidr
   }
 
   # JENKINS 
   ingress {
     description = "Jenkins"
-    from_port   = 8080
-    to_port     = 8080
+    from_port   = var.jenkins_port
+    to_port     = var.jenkins_port
     protocol    = "tcp"
 
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = var.allowed_cidr
   }
 
   # HTTP
@@ -30,7 +30,7 @@ resource "aws_security_group" "jenkins_sg" {
     to_port     = 80
     protocol    = "tcp"
 
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = var.allowed_cidr
   }
 
   # HTTPS
@@ -40,7 +40,7 @@ resource "aws_security_group" "jenkins_sg" {
     to_port     = 443
     protocol    = "tcp"
 
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = var.allowed_cidr
   }
 
   # OUTBOUND
@@ -53,6 +53,6 @@ resource "aws_security_group" "jenkins_sg" {
   }
 
   tags = {
-    Name = "jenkins-sg"
+    Name = var.sg_name
   }
 }

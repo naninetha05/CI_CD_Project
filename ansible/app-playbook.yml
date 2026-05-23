@@ -1,0 +1,161 @@
+---
+- name: Configure Application Server
+  hosts: app_servers
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Update package manager
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install OpenJDK 11
+      apt:
+        name: openjdk-11-jdk
+        state: present
+
+    - name: Create tomcat user
+      user:
+        name: tomcat
+        shell: /bin/false
+        home: /opt/tomcat
+        createhome: no
+
+    - name: Download Tomcat
+      get_url:
+        url: https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.70/apache-tomcat-9.0.70.tar.gz
+        dest: /tmp/tomcat.tar.gz
+
+    - name: Extract Tomcat
+      unarchive:
+        src: /tmp/tomcat.tar.gz
+        dest: /opt
+        remote_src: yes
+
+    - name: Rename Tomcat directory
+      shell: mv /opt/apache-tomcat-9.0.70 /opt/tomcat
+      args:
+        creates: /opt/tomcat/bin/startup.sh
+
+    - name: Set Tomcat ownership
+      file:
+        path: /opt/tomcat
+        owner: tomcat
+        group: tomcat
+        recurse: yes
+
+    - name: Make Tomcat scripts executable
+      shell: chmod +x /opt/tomcat/bin/*.sh
+
+    - name: Create Tomcat systemd service file
+      copy:
+        content: |
+          [Unit]
+          Description=Tomcat 9 servlet container
+          After=network.target
+
+          [Service]
+          Type=forking
+          User=tomcat
+          Group=tomcat
+          Environment="CATALINA_HOME=/opt/tomcat"
+          Environment="CATALINA_BASE=/opt/tomcat"
+          ExecStart=/opt/tomcat/bin/startup.sh
+          ExecStop=/opt/tomcat/bin/shutdown.sh
+          Restart=on-failure
+          RestartSec=10
+
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/tomcat.service
+
+    - name: Enable Tomcat service
+      systemd:
+        name: tomcat
+        daemon_reload: yes
+        enabled: yes
+        state: started
+
+    - name: Wait for Tomcat to start
+      wait_for:
+        port: 8080
+        delay: 5
+        timeout: 300
+
+    - name: Install CloudWatch agent
+      shell: |
+        cd /tmp
+        wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+        dpkg -i -E ./amazon-cloudwatch-agent.deb
+      ignore_errors: yes
+
+    - name: Create CloudWatch agent config directory
+      file:
+        path: /opt/aws/amazon-cloudwatch-agent/etc
+        state: directory
+        recurse: yes
+
+    - name: Create CloudWatch agent configuration
+      copy:
+        content: |
+          {
+            "metrics": {
+              "namespace": "CICDProject",
+              "metrics_collected": {
+                "cpu": {
+                  "measurement": [
+                    "cpu_usage_idle",
+                    "cpu_usage_iowait"
+                  ],
+                  "totalcpu": false
+                },
+                "mem": {
+                  "measurement": [
+                    "mem_used_percent"
+                  ]
+                },
+                "disk": {
+                  "measurement": [
+                    "used_percent"
+                  ],
+                  "metrics_collection_interval": 60,
+                  "resources": [
+                    "*"
+                  ]
+                }
+              }
+            },
+            "logs": {
+              "logs_collected": {
+                "files": {
+                  "collect_list": [
+                    {
+                      "file_path": "/opt/tomcat/logs/catalina.out",
+                      "log_group_name": "/aws/ec2/tomcat",
+                      "log_stream_name": "application-logs"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        dest: /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+
+    - name: Start CloudWatch agent
+      shell: /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+      ignore_errors: yes
+
+    - name: Create Tomcat webapps directory
+      file:
+        path: /opt/tomcat/webapps/cicd-app
+        state: directory
+        owner: tomcat
+        group: tomcat
+
+    - name: Display application server ready message
+      debug:
+        msg: |
+          Application Server is ready!
+          Tomcat is running on http://<APP_IP>:8080
+          Waiting for WAR deployment from Jenkins
