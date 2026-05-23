@@ -77,13 +77,11 @@
     - name: Get initial Jenkins admin password
       shell: cat /var/lib/jenkins/secrets/initialAdminPassword
       register: jenkins_password
-      until: jenkins_password is succeeded
-      retries: 5
-      delay: 5
+      ignore_errors: yes
 
     - name: Display Jenkins initial password
       debug:
-        msg: "Jenkins initial admin password: {{ jenkins_password.stdout }}"
+        msg: "{{ 'Jenkins initial admin password: ' + jenkins_password.stdout if jenkins_password.rc == 0 else 'Jenkins already configured - no initial password needed' }}"
 
     - name: Configure Jenkins plugins
       shell: |
