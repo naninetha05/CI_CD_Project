@@ -1,6 +1,6 @@
 # AWS DevOps CI/CD Project
 
-A production-style DevOps project where I built a complete CI/CD pipeline to deploy a Java web application on AWS without Docker or Kubernetes.
+A production style DevOps project where I built a complete CI/CD pipeline to deploy a Java web application on AWS without Docker or Kubernetes.
 
 ---
 
@@ -10,7 +10,7 @@ I set up the entire workflow a real company would use:
 
 - Developer pushes code to GitHub
 - GitHub webhook triggers Jenkins automatically
-- Jenkins runs the full pipeline build, test, infrastructure, deploy
+- Jenkins runs the full pipeline build, test, infrastructure, and deploy
 - Application ends up running on an EC2 server via Tomcat
 
 ---
@@ -36,17 +36,17 @@ VPC (10.0.0.0/16)
 └── Private Subnet → App Server EC2 (Tomcat)
 ```
 
-State is stored remotely in S3 so it's safe and shared. DynamoDB handles state locking.
+State is stored remotely in S3, so it's safe and shared. DynamoDB handles state locking.
 
 ---
 
 ## Pipeline Stages
 
-1. Clone repo from GitHub
+1. Clone the repo from GitHub
 2. Terraform init → plan → apply (provisions AWS infra)
 3. Verify EC2 instances are running
-4. Ansible configures Jenkins server
-5. Ansible configures app server
+4. Ansible configures the Jenkins server
+5. Ansible configures the app server
 6. Maven builds the WAR
 7. Ansible deploys WAR to Tomcat + health check
 
