@@ -33,6 +33,11 @@ output "app_private_ip" {
   value       = module.app_ec2.private_ip
 }
 
+output "app_public_ip" {
+  description = "Public IP of App server"
+  value       = module.app_ec2.public_ip
+}
+
 output "app_instance_id" {
   description = "Instance ID of App server"
   value       = module.app_ec2.instance_id
