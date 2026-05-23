@@ -40,15 +40,15 @@ module "jenkins_ec2" {
   instance_name     = "jenkins-server"
 }
 
-# App Server — private subnet
+# App Server — public subnet (accessible for Ansible configuration)
 module "app_ec2" {
   source = "./modules/ec2"
 
   instance_type     = "t3.micro"
   ami               = "ami-07a00cf47dbbc844c"
   key_name          = var.key_pair_name
-  availability_zone = "ap-south-1b"
-  subnet_id         = module.vpc.private_subnet_id
+  availability_zone = "ap-south-1a"
+  subnet_id         = module.vpc.public_subnet_id
   security_group_id = module.security_group.security_group_id
   instance_name     = "app-server"
 }
