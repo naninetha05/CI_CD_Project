@@ -5,6 +5,7 @@ pipeline {
         AWS_ACCESS_KEY_ID     = credentials('aws-access-key-id')
         AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
         AWS_DEFAULT_REGION    = 'ap-south-1'
+
         REPO_URL              = 'https://github.com/naninetha05/CI_CD_Project'
         TF_DIR                = 'terraform'
     }
@@ -43,7 +44,12 @@ pipeline {
 
         stage('Verification') {
             steps {
-                sh 'aws ec2 describe-instances --region ap-south-1 --query "Reservations[*].Instances[*].{ID:InstanceId,State:State.Name,IP:PublicIpAddress}" --output table'
+                sh '''
+                    aws ec2 describe-instances \
+                    --region ap-south-1 \
+                    --query "Reservations[*].Instances[*].{ID:InstanceId,State:State.Name,IP:PublicIpAddress}" \
+                    --output table
+                '''
             }
         }
 
@@ -51,8 +57,8 @@ pipeline {
             steps {
                 sh '''
                     ansible-playbook -i ansible/inventory.ini ansible/jenkins-playbook.yml \
-                        --private-key /var/lib/jenkins/.ssh/openclaw-key.pem \
-                        -u ubuntu
+                    --private-key /var/lib/jenkins/.ssh/openclaw-key.pem \
+                    -u ubuntu
                 '''
             }
         }
@@ -61,15 +67,27 @@ pipeline {
             steps {
                 sh '''
                     ansible-playbook -i ansible/inventory.ini ansible/app-playbook.yml \
-                        --private-key /var/lib/jenkins/.ssh/project-key.pem \
-                        -u ubuntu
+                    --private-key /var/lib/jenkins/.ssh/project-key.pem \
+                    -u ubuntu
                 '''
             }
         }
 
         stage('Build Application') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                sh 'mvn clean verify'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonarqube') {
+                    sh '''
+                        mvn sonar:sonar \
+                        -Dsonar.projectKey=CI_CD_Project \
+                        -Dsonar.projectName=CI_CD_Project
+                    '''
+                }
             }
         }
 
@@ -77,21 +95,24 @@ pipeline {
             steps {
                 sh '''
                     ansible-playbook -i ansible/inventory.ini ansible/deploy-playbook.yml \
-                        --private-key /var/lib/jenkins/.ssh/project-key.pem \
-                        -u ubuntu \
-                        -e "war_file_path=$(pwd)/target/app.war"
+                    --private-key /var/lib/jenkins/.ssh/project-key.pem \
+                    -u ubuntu \
+                    -e "war_file_path=$(pwd)/target/app.war"
                 '''
             }
         }
     }
 
     post {
+
         success {
-            echo '✅ Pipeline completed successfully! Infrastructure provisioned and application deployed.'
+            echo '✅ Pipeline completed successfully!'
         }
+
         failure {
-            echo '❌ Pipeline failed. Check the logs above for details.'
+            echo '❌ Pipeline failed. Check logs carefully.'
         }
+
         always {
             cleanWs()
         }
