@@ -1,54 +1,82 @@
 # AWS DevOps CI/CD Project
 
-A production style DevOps project where I built a complete CI/CD pipeline to deploy a Java web application on AWS without Docker or Kubernetes.
+A production-style DevOps project where I built a complete CI/CD pipeline to deploy a Java web application on AWS — without Docker or Kubernetes.
 
 ---
 
 ## What I Built
 
-I set up the entire workflow a real company would use:
-
-- Developer pushes code to GitHub
-- GitHub webhook triggers Jenkins automatically
-- Jenkins runs the full pipeline build, test, infrastructure, and deploy
-- Application ends up running on an EC2 server via Tomcat
+A developer pushes code to GitHub → GitHub webhook triggers Jenkins → full pipeline runs automatically → app is live on AWS.
 
 ---
 
-## What I Used
+## Pipeline Stages
 
-- **Terraform** — provisioned all AWS infrastructure (VPC, subnets, EC2, security groups, IAM roles) using modules
-- **Ansible** — configured the servers after Terraform created them (installed Java, Tomcat, Jenkins, CloudWatch agent)
-- **Jenkins** — orchestrated the whole pipeline end to end
-- **Maven** — built the Java application and ran unit tests
-- **SonarQube** — static code analysis with a quality gate (pipeline stops if code fails)
-- **Tomcat** — hosts the Java WAR file
-- **CloudWatch** — collects CPU, memory, disk metrics and Tomcat logs from the app server
-- **S3 + DynamoDB** — remote Terraform state with locking
+1. Clone repo from GitHub
+2. Terraform init → plan → apply (provisions AWS infrastructure)
+3. Verify EC2 instances are running
+4. Ansible configures Jenkins server
+5. Ansible configures app server (Tomcat)
+6. Maven builds the WAR artifact
+7. Ansible deploys WAR to Tomcat + health check
 
 ---
 
 ## AWS Infrastructure
 
 ```
-VPC (10.0.0.0/16)
-├── Public Subnet  → Jenkins EC2
-└── Private Subnet → App Server EC2 (Tomcat)
+VPC (10.0.0.0/16) — ap-south-1
+├── Public Subnet → Jenkins EC2  (EIP: 13.207.70.94)
+└── Public Subnet → App Server EC2 (EIP: 13.207.110.172)
 ```
 
-State is stored remotely in S3, so it's safe and shared. DynamoDB handles state locking.
+- Remote state stored in S3 (`ci-cd-pipline-projeact`)
+- IAM roles attached to both EC2s (no hardcoded credentials)
+- Security groups for SSH and port 8080
 
 ---
 
-## Pipeline Stages
+## Tech Stack
 
-1. Clone the repo from GitHub
-2. Terraform init → plan → apply (provisions AWS infra)
-3. Verify EC2 instances are running
-4. Ansible configures the Jenkins server
-5. Ansible configures the app server
-6. Maven builds the WAR
-7. Ansible deploys WAR to Tomcat + health check
+| Layer | Tool |
+|---|---|
+| Cloud | AWS (EC2, VPC, IAM, S3, CloudWatch) |
+| Infrastructure as Code | Terraform (modular) |
+| Configuration Management | Ansible |
+| CI/CD | Jenkins |
+| Build | Maven |
+| App Server | Apache Tomcat 9 |
+| Language | Java 11 |
+| Version Control | Git + GitHub |
+
+---
+
+## Project Structure
+
+```
+CI_CD_Project/
+├── Jenkinsfile                          # 9-stage pipeline
+├── pom.xml                              # Maven build config
+├── src/
+│   ├── main/java/com/cicdproject/       # HelloServlet.java
+│   └── main/webapp/WEB-INF/web.xml      # Servlet config
+├── terraform/
+│   ├── main.tf                          # VPC, EC2, SG, IAM modules
+│   ├── backend.tf                       # S3 remote state
+│   └── modules/vpc, sg, ec2, iam/
+├── ansible/
+│   ├── inventory.ini                    # Server IPs
+│   ├── jenkins-playbook.yml             # Jenkins server setup
+│   ├── app-playbook.yml                 # Tomcat server setup
+│   └── deploy-playbook.yml              # WAR deployment
+└── README.md
+```
+
+---
+
+## App
+
+Live at: `http://13.207.110.172:8080/app/`
 
 ---
 
@@ -59,7 +87,7 @@ git clone https://github.com/naninetha05/CI_CD_Project
 cd CI_CD_Project
 ```
 
-Add AWS credentials in Jenkins (`aws-access-key-id`, `aws-secret-access-key`), update the S3 bucket name in `terraform/backend.tf`, update server IPs in `ansible/inventory.ini` after Terraform runs, then push — the pipeline handles the rest.
+Add AWS credentials in Jenkins (`aws-access-key-id`, `aws-secret-access-key`), then push — webhook triggers the pipeline automatically.
 
 ---
 
