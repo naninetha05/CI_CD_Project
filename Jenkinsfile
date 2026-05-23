@@ -51,7 +51,7 @@ pipeline {
             steps {
                 sh '''
                     ansible-playbook -i ansible/inventory.ini ansible/jenkins-playbook.yml \
-                        --private-key ~/.ssh/project-key.pem \
+                        --private-key /var/lib/jenkins/.ssh/openclaw-key.pem \
                         -u ubuntu
                 '''
             }
@@ -61,7 +61,7 @@ pipeline {
             steps {
                 sh '''
                     ansible-playbook -i ansible/inventory.ini ansible/app-playbook.yml \
-                        --private-key ~/.ssh/project-key.pem \
+                        --private-key /var/lib/jenkins/.ssh/project-key.pem \
                         -u ubuntu
                 '''
             }
@@ -77,7 +77,7 @@ pipeline {
             steps {
                 sh '''
                     ansible-playbook -i ansible/inventory.ini ansible/deploy-playbook.yml \
-                        --private-key ~/.ssh/project-key.pem \
+                        --private-key /var/lib/jenkins/.ssh/project-key.pem \
                         -u ubuntu \
                         -e "war_file_path=$(pwd)/target/app.war"
                 '''
