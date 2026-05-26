@@ -13,9 +13,10 @@ public class HelloServletTest {
     }
 
     @Test
-    public void testJavaVersion() {
+    public void testJavaVersionExists() {
         String javaVersion = System.getProperty("java.version");
         assertNotNull(javaVersion);
+        assertFalse(javaVersion.isEmpty());
     }
 
     @Test
