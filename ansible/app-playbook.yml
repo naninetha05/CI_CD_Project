@@ -5,6 +5,10 @@
   gather_facts: yes
 
   tasks:
+    - name: Clean tmp directory
+      shell: rm -rf /tmp/ansible* /tmp/tomcat* /tmp/*.tar.gz
+      ignore_errors: yes
+
     - name: Update package manager
       apt:
         update_cache: yes
