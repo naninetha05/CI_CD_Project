@@ -18,7 +18,8 @@ A developer pushes code to GitHub → GitHub webhook triggers Jenkins → full p
 4. Ansible configures Jenkins server
 5. Ansible configures app server (Tomcat)
 6. Maven builds the WAR artifact
-7. Ansible deploys WAR to Tomcat + health check
+7. SonarQube code analysis + quality gate
+8. Ansible deploys WAR to Tomcat + health check
 
 ---
 
@@ -45,6 +46,7 @@ VPC (10.0.0.0/16) — ap-south-1
 | Configuration Management | Ansible |
 | CI/CD | Jenkins |
 | Build | Maven |
+| Code Quality | SonarQube |
 | App Server | Apache Tomcat 9 |
 | Language | Java 11 |
 | Version Control | Git + GitHub |
