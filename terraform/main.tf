@@ -27,7 +27,6 @@ module "security_group" {
   allowed_cidr = ["0.0.0.0/0"]
 }
 
-# Jenkins Server — public subnet
 module "jenkins_ec2" {
   source = "./modules/ec2"
 
@@ -40,7 +39,6 @@ module "jenkins_ec2" {
   instance_name     = "jenkins-server"
 }
 
-# App Server — public subnet (accessible for Ansible configuration)
 module "app_ec2" {
   source = "./modules/ec2"
 
@@ -51,13 +49,4 @@ module "app_ec2" {
   subnet_id         = module.vpc.public_subnet_id
   security_group_id = module.security_group.security_group_id
   instance_name     = "app-server"
-}
-
-module "iam" {
-  source = "./modules/iam"
-
-  jenkins_instance_name = "jenkins-role"
-  app_instance_name     = "app-role"
-  s3_bucket_name        = var.s3_bucket_name
-  dynamodb_table_name   = "terraform-state-lock"
 }

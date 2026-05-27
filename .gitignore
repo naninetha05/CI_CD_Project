@@ -44,3 +44,6 @@ ansible/inventory.ini.bak
 
 # OS
 Thumbs.db
+
+# Personal notes — not for public sharing
+notes/

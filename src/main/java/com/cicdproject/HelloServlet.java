@@ -10,24 +10,27 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class HelloServlet extends HttpServlet {
+
     private static final long serialVersionUID = 1L;
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
         response.setContentType("text/html;charset=UTF-8");
 
-        try (PrintWriter out = response.getWriter()) {
-            out.println("<html>");
-            out.println("<head><title>CICD Java Application</title></head>");
-            out.println("<body>");
-            out.println("<h1>Welcome to CICD Java Application</h1>");
-            out.println("<p><strong>Status:</strong> Running Successfully</p>");
-            out.println("<p><strong>Deployed:</strong> " + getCurrentDateTime() + "</p>");
-            out.println("<p><strong>Server:</strong> " + request.getServerName() + "</p>");
-            out.println("<p><strong>Java:</strong> " + System.getProperty("java.version") + "</p>");
-            out.println("</body></html>");
-        }
+        PrintWriter out = response.getWriter();
+
+        out.println("<html>");
+        out.println("<head><title>CICD Java App</title></head>");
+        out.println("<body>");
+        out.println("<h2>Welcome to CICD Java Application</h2>");
+        out.println("<p>Status: Running Successfully</p>");
+        out.println("<p>Deployed: " + getCurrentTime() + "</p>");
+        out.println("<p>Server: " + request.getServerName() + "</p>");
+        out.println("<p>Java: " + System.getProperty("java.version") + "</p>");
+        out.println("</body>");
+        out.println("</html>");
     }
 
     @Override
@@ -36,7 +39,8 @@ public class HelloServlet extends HttpServlet {
         doGet(request, response);
     }
 
-    private String getCurrentDateTime() {
-        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+    private String getCurrentTime() {
+        LocalDateTime now = LocalDateTime.now();
+        return now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 }
