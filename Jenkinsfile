@@ -78,16 +78,4 @@ pipeline {
             }
         }
     }
-
-    post {
-        success {
-            echo 'pipeline done successfully'
-        }
-        failure {
-            echo 'pipeline failed - check the logs'
-        }
-        always {
-            cleanWs()
-        }
-    }
 }
